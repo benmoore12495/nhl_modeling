@@ -1,0 +1,440 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --gold: #c9a96e;
+  --gold-dark: #a8864d;
+  --molly: #c97a8d;
+  --molly-light: #f5e0e6;
+  --reid: #6b8cba;
+  --reid-light: #dce6f3;
+  --bg: #faf8f5;
+  --card: #ffffff;
+  --text: #3d3028;
+  --text-light: #8a7a6a;
+  --border: #ede5db;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+}
+
+body {
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.page-header {
+  text-align: center;
+  margin-bottom: 28px;
+  padding-top: 12px;
+}
+
+.page-header .icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.page-header h1 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 26px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.page-header .subtitle {
+  color: var(--text-light);
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+
+/* ── Question label ── */
+.q-text {
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.q-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold);
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Vote buttons ── */
+.vote-row {
+  display: flex;
+  gap: 8px;
+}
+
+.vote-btn {
+  flex: 1;
+  padding: 13px 8px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  transition: all 0.15s;
+  background: var(--bg);
+  color: var(--text-light);
+}
+
+.vote-btn.molly {
+  border-color: var(--molly-light);
+  color: var(--molly);
+}
+
+.vote-btn.molly.selected {
+  background: var(--molly);
+  border-color: var(--molly);
+  color: white;
+}
+
+.vote-btn.reid {
+  border-color: var(--reid-light);
+  color: var(--reid);
+}
+
+.vote-btn.reid.selected {
+  background: var(--reid);
+  border-color: var(--reid);
+  color: white;
+}
+
+/* ── Forms ── */
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 13px 14px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--text);
+  background: white;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+/* ── Submit / primary buttons ── */
+.submit-btn {
+  background: var(--gold);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 15px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s;
+}
+
+.submit-btn:hover {
+  background: var(--gold-dark);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Person selection buttons ── */
+.person-btn {
+  display: block;
+  width: 100%;
+  padding: 18px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background: white;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 700;
+  font-family: inherit;
+  margin-bottom: 10px;
+  text-align: center;
+  transition: all 0.15s;
+  color: var(--text);
+}
+
+.person-btn.molly-btn:hover,
+.person-btn.molly-btn.selected {
+  border-color: var(--molly);
+  background: var(--molly-light);
+  color: var(--molly);
+}
+
+.person-btn.reid-btn:hover,
+.person-btn.reid-btn.selected {
+  border-color: var(--reid);
+  background: var(--reid-light);
+  color: var(--reid);
+}
+
+/* ── Section title ── */
+.section-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 17px;
+  color: var(--text);
+  margin: 20px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Screens ── */
+.screen {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+}
+
+.screen.active {
+  display: flex;
+}
+
+/* ── Sticky submit bar ── */
+.sticky-submit {
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(transparent, var(--bg) 20%);
+  padding: 20px 0 8px;
+  margin-top: 4px;
+}
+
+/* ── Answered count ── */
+.answered-count {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 14px;
+}
+
+/* ── Success screen ── */
+.success-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 0;
+}
+
+.success-icon {
+  font-size: 72px;
+  margin-bottom: 20px;
+}
+
+.success-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+.success-text {
+  color: var(--text-light);
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 280px;
+}
+
+/* ── Error ── */
+.error {
+  color: #c0392b;
+  font-size: 13px;
+  margin-top: 8px;
+  text-align: center;
+  min-height: 18px;
+}
+
+/* ── Back link ── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-light);
+  font-size: 14px;
+  text-decoration: none;
+  margin-bottom: 4px;
+}
+
+/* ── Host link (subtle) ── */
+.host-link {
+  display: block;
+  text-align: center;
+  color: var(--text-light);
+  font-size: 13px;
+  text-decoration: none;
+  margin-top: auto;
+  padding-top: 28px;
+  opacity: 0.7;
+}
+
+/* ── Dashboard tabs ── */
+.tab-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  text-align: center;
+  color: var(--text-light);
+  transition: all 0.15s;
+}
+
+.tab.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: white;
+}
+
+/* ── Vote bar ── */
+.vote-bar-track {
+  height: 10px;
+  background: var(--reid-light);
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.vote-bar-fill {
+  height: 100%;
+  background: var(--molly);
+  border-radius: 5px;
+  transition: width 0.5s;
+}
+
+.vote-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.voters-list {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* ── Trivia comparison ── */
+.trivia-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.trivia-cell {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.trivia-cell.molly-cell {
+  background: var(--molly-light);
+}
+
+.trivia-cell.reid-cell {
+  background: var(--reid-light);
+}
+
+.cell-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  opacity: 0.65;
+  margin-bottom: 3px;
+}
+
+.match-badge {
+  text-align: center;
+  font-size: 13px;
+  margin-top: 7px;
+}
+
+/* ── Unanswered highlight ── */
+.card.unanswered {
+  border-color: #e8a0a0;
+  background: #fff9f9;
+}

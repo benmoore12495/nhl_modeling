@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Most Likely To… | Molly & Reid</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-link">← Back</a>
+
+    <!-- Screen 1: Name entry -->
+    <div id="screen-name" class="screen active">
+      <div class="page-header">
+        <span class="icon">🗳️</span>
+        <h1>Most Likely To…</h1>
+        <p class="subtitle">Vote for Molly or Reid on 15 questions</p>
+      </div>
+
+      <div class="card">
+        <div class="form-group">
+          <label for="player-name">Your Name</label>
+          <input type="text" id="player-name" placeholder="Enter your name" autocomplete="given-name" autocorrect="off">
+        </div>
+        <button class="submit-btn" onclick="startGame()">Let's Play! →</button>
+        <div id="name-error" class="error"></div>
+      </div>
+    </div>
+
+    <!-- Screen 2: Questions -->
+    <div id="screen-questions" class="screen">
+      <div class="page-header" style="margin-bottom: 8px;">
+        <h1>Most Likely To…</h1>
+      </div>
+
+      <div class="answered-count" id="answered-count">0 / 15 answered</div>
+
+      <div id="questions-list"></div>
+
+      <div class="sticky-submit">
+        <button class="submit-btn" id="submit-btn" onclick="submitVotes()">Submit My Votes</button>
+        <div id="submit-error" class="error"></div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Success -->
+    <div id="screen-success" class="screen">
+      <div class="success-wrap">
+        <div class="success-icon">🎉</div>
+        <h2 class="success-title">Votes Submitted!</h2>
+        <p class="success-text">Thanks for playing! The host will share the results after everyone votes.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    const QUESTIONS = [
+      "Who is best at keeping secrets?",
+      "Better cook?",
+      "More likely to be running late?",
+      "Most likely to get lost?",
+      "Who made the first move?",
+      "Better caretaker when the other is sick?",
+      "Crazier family?",
+      "More likely to talk their way out of a speeding ticket?",
+      "Wakes up earliest?",
+      "Will spend more time on the dance floor at the wedding?",
+      "Who makes the most plans?",
+      "Who is more forgetful?",
+      "Likes reality TV more?",
+      "Better dancer?",
+      "Spends more time on their phone?"
+    ];
+
+    let playerName = '';
+    let answers = {};
+    let db;
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+    } catch (e) {
+      console.error('Firebase init error:', e);
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function startGame() {
+      playerName = document.getElementById('player-name').value.trim();
+      if (!playerName) {
+        document.getElementById('name-error').textContent = 'Please enter your name to continue.';
+        return;
+      }
+      renderQuestions();
+      showScreen('screen-questions');
+    }
+
+    function renderQuestions() {
+      document.getElementById('questions-list').innerHTML = QUESTIONS.map((q, i) => `
+        <div class="card" id="q-card-${i}">
+          <div class="q-text">
+            <span class="q-number">${i + 1}</span>
+            <span>${q}</span>
+          </div>
+          <div class="vote-row">
+            <button class="vote-btn molly" id="btn-molly-${i}" onclick="vote(${i}, 'Molly')">
+              💕 Molly
+            </button>
+            <button class="vote-btn reid" id="btn-reid-${i}" onclick="vote(${i}, 'Reid')">
+              🤵 Reid
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function vote(qIndex, person) {
+      answers[qIndex] = person;
+
+      const mollyBtn = document.getElementById(`btn-molly-${qIndex}`);
+      const reidBtn  = document.getElementById(`btn-reid-${qIndex}`);
+      const card     = document.getElementById(`q-card-${qIndex}`);
+
+      if (person === 'Molly') {
+        mollyBtn.classList.add('selected');
+        reidBtn.classList.remove('selected');
+      } else {
+        reidBtn.classList.add('selected');
+        mollyBtn.classList.remove('selected');
+      }
+      card.classList.remove('unanswered');
+
+      const count = Object.keys(answers).length;
+      document.getElementById('answered-count').textContent = `${count} / ${QUESTIONS.length} answered`;
+      document.getElementById('submit-error').textContent = '';
+    }
+
+    async function submitVotes() {
+      const unanswered = QUESTIONS.reduce((acc, _, i) => {
+        if (answers[i] === undefined) acc.push(i);
+        return acc;
+      }, []);
+
+      if (unanswered.length > 0) {
+        // Highlight unanswered cards and scroll to first one
+        unanswered.forEach(i => document.getElementById(`q-card-${i}`).classList.add('unanswered'));
+        document.getElementById(`q-card-${unanswered[0]}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('submit-error').textContent =
+          `${unanswered.length} question${unanswered.length > 1 ? 's' : ''} still need${unanswered.length === 1 ? 's' : ''} an answer.`;
+        return;
+      }
+
+      if (!db) {
+        document.getElementById('submit-error').textContent = 'Firebase not set up yet — check firebase-config.js.';
+        return;
+      }
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+
+      try {
+        const key = playerName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+        await db.ref(`selection_votes/${key}`).set({
+          name: playerName,
+          answers: answers,
+          submittedAt: Date.now()
+        });
+        showScreen('screen-success');
+      } catch (e) {
+        document.getElementById('submit-error').textContent = 'Submission failed — please try again.';
+        btn.disabled = false;
+        btn.textContent = 'Submit My Votes';
+        console.error(e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('player-name').addEventListener('keypress', e => {
+        if (e.key === 'Enter') startGame();
+      });
+    });
+  </script>
+</body>
+</html>
