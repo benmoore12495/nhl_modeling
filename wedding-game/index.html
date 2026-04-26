@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Molly & Reid's Wedding Games</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .hero {
+      text-align: center;
+      padding: 52px 0 36px;
+    }
+    .hero .icon { font-size: 60px; display: block; margin-bottom: 14px; }
+    .hero h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 34px;
+      margin-bottom: 6px;
+    }
+    .hero .tagline {
+      font-size: 14px;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+    .game-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px;
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: var(--text);
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .game-card:active { transform: scale(0.98); }
+    .game-card.primary {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: white;
+    }
+    .game-card .card-icon { font-size: 36px; flex-shrink: 0; }
+    .game-card .card-text { text-align: left; }
+    .game-card .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+    .game-card .card-desc {
+      font-size: 13px;
+      opacity: 0.75;
+      line-height: 1.4;
+    }
+    .chevron {
+      margin-left: auto;
+      font-size: 18px;
+      opacity: 0.5;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <span class="icon">💍</span>
+      <h1>Molly & Reid</h1>
+      <p class="tagline">Wedding Night Games</p>
+    </div>
+
+    <a href="selection.html" class="game-card primary">
+      <span class="card-icon">🗳️</span>
+      <div class="card-text">
+        <div class="card-title">Most Likely To…</div>
+        <div class="card-desc">Everyone votes — Molly or Reid?</div>
+      </div>
+      <span class="chevron">›</span>
+    </a>
+
+    <a href="trivia.html" class="game-card">
+      <span class="card-icon">💑</span>
+      <div class="card-text">
+        <div class="card-title">Newlywed Trivia</div>
+        <div class="card-desc">For Molly & Reid — answer about each other</div>
+      </div>
+      <span class="chevron">›</span>
+    </a>
+
+    <a href="dashboard.html" class="host-link">Host Dashboard</a>
+  </div>
+</body>
+</html>

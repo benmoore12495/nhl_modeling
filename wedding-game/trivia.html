@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Newlywed Trivia | Molly & Reid</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-link">← Back</a>
+
+    <!-- Screen 1: Pick person + password -->
+    <div id="screen-select" class="screen active">
+      <div class="page-header">
+        <span class="icon">💑</span>
+        <h1>Newlywed Trivia</h1>
+        <p class="subtitle">Just for the happy couple</p>
+      </div>
+
+      <div class="card">
+        <label style="margin-bottom: 10px;">Who are you?</label>
+        <button class="person-btn molly-btn" onclick="selectPerson('molly')">💕 I'm Molly</button>
+        <button class="person-btn reid-btn"  onclick="selectPerson('reid')">🤵 I'm Reid</button>
+      </div>
+
+      <div id="password-section" style="display: none;">
+        <div class="card">
+          <div class="form-group">
+            <label for="person-password">Your secret code</label>
+            <input type="password" id="person-password" placeholder="••••••••">
+          </div>
+          <button class="submit-btn" onclick="checkPassword()">Continue →</button>
+          <div id="pw-error" class="error"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 2: Answer questions -->
+    <div id="screen-questions" class="screen">
+      <div class="page-header" style="margin-bottom: 4px;">
+        <h1>Newlywed Trivia</h1>
+        <p class="subtitle" id="trivia-subtitle"></p>
+      </div>
+
+      <p style="font-size: 13px; color: var(--text-light); margin-bottom: 16px; line-height: 1.5;">
+        Answer both sections — about yourself AND about your partner. The host will reveal how well you know each other!
+      </p>
+
+      <div id="about-self-section"></div>
+      <div id="about-partner-section"></div>
+
+      <div class="sticky-submit">
+        <button class="submit-btn" id="trivia-submit" onclick="submitTrivia()">Submit Answers</button>
+        <div id="trivia-error" class="error"></div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Success -->
+    <div id="screen-success" class="screen">
+      <div class="success-wrap">
+        <div class="success-icon">💍</div>
+        <h2 class="success-title">Answers Saved!</h2>
+        <p class="success-text">Your answers are locked in. The host will reveal how well you know each other later!</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    const QUESTIONS = [
+      "Favorite type of food",
+      "Favorite restaurant",
+      "What did they want to be when they grew up?",
+      "Favorite way to spend a Saturday afternoon",
+      "Dream vacation",
+      "Name of their high school",
+      "Zodiac sign",
+      "Favorite article of clothing",
+      "Number of times they floss per week",
+      "Favorite book",
+      "Favorite artist (music or other)",
+      "Name of their first pet",
+      "Birthday of their sibling",
+      "Shoe size",
+      "Mother's maiden name"
+    ];
+
+    let selectedPerson = null;
+    let db;
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+    } catch (e) {
+      console.error('Firebase init error:', e);
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function selectPerson(person) {
+      selectedPerson = person;
+      document.querySelectorAll('.person-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelector(`.${person}-btn`).classList.add('selected');
+      const section = document.getElementById('password-section');
+      section.style.display = 'block';
+      section.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => document.getElementById('person-password').focus(), 300);
+    }
+
+    function checkPassword() {
+      const pw      = document.getElementById('person-password').value;
+      const correct = selectedPerson === 'molly' ? APP_CONFIG.mollyPassword : APP_CONFIG.reidPassword;
+
+      if (pw !== correct) {
+        document.getElementById('pw-error').textContent = 'Wrong code — try again!';
+        return;
+      }
+
+      renderQuestions();
+      showScreen('screen-questions');
+    }
+
+    function renderQuestions() {
+      const selfName    = selectedPerson === 'molly' ? 'Molly' : 'Reid';
+      const partnerName = selectedPerson === 'molly' ? 'Reid'  : 'Molly';
+
+      document.getElementById('trivia-subtitle').textContent = `Playing as ${selfName}`;
+
+      const makeSection = (idPrefix, placeholder) =>
+        QUESTIONS.map((q, i) => `
+          <div class="card">
+            <div class="q-text">
+              <span class="q-number">${i + 1}</span>
+              <span>${q}</span>
+            </div>
+            <input type="text" id="${idPrefix}-${i}" placeholder="${placeholder}">
+          </div>
+        `).join('');
+
+      document.getElementById('about-self-section').innerHTML =
+        `<div class="section-title">About You (${selfName})</div>` +
+        makeSection('self', 'Your answer…');
+
+      document.getElementById('about-partner-section').innerHTML =
+        `<div class="section-title">About ${partnerName}</div>` +
+        makeSection('partner', `What's ${partnerName}'s answer?`);
+    }
+
+    async function submitTrivia() {
+      if (!db) {
+        document.getElementById('trivia-error').textContent = 'Firebase not set up yet — check firebase-config.js.';
+        return;
+      }
+
+      const self    = {};
+      const partner = {};
+
+      QUESTIONS.forEach((_, i) => {
+        self[i]    = document.getElementById(`self-${i}`).value.trim();
+        partner[i] = document.getElementById(`partner-${i}`).value.trim();
+      });
+
+      const btn = document.getElementById('trivia-submit');
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+
+      try {
+        await db.ref(`trivia_answers/${selectedPerson}`).set({
+          self,
+          partner,
+          submittedAt: Date.now()
+        });
+        showScreen('screen-success');
+      } catch (e) {
+        document.getElementById('trivia-error').textContent = 'Submission failed — please try again.';
+        btn.disabled = false;
+        btn.textContent = 'Submit Answers';
+        console.error(e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('person-password').addEventListener('keypress', e => {
+        if (e.key === 'Enter') checkPassword();
+      });
+    });
+  </script>
+</body>
+</html>

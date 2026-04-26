@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Host Dashboard | Molly & Reid</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .voter-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      margin: 2px 2px 2px 0;
+    }
+    .pill-molly { background: var(--molly-light); color: var(--molly); }
+    .pill-reid  { background: var(--reid-light);  color: var(--reid);  }
+    .winner-badge { font-size: 13px; }
+    .no-votes { font-size: 13px; color: var(--text-light); }
+    .meta-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .meta-bar span { font-size: 13px; color: var(--text-light); }
+    .refresh-btn {
+      font-size: 12px;
+      color: var(--gold);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      padding: 0;
+    }
+    .trivia-status {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-bottom: 14px;
+    }
+    .match-count {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-light);
+      text-align: right;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Screen 1: Password -->
+    <div id="screen-login" class="screen active">
+      <div class="page-header">
+        <span class="icon">📊</span>
+        <h1>Host Dashboard</h1>
+        <p class="subtitle">For your eyes only</p>
+      </div>
+
+      <div class="card">
+        <div class="form-group">
+          <label for="host-password">Host password</label>
+          <input type="password" id="host-password" placeholder="••••••••">
+        </div>
+        <button class="submit-btn" onclick="checkHostPassword()">Enter →</button>
+        <div id="host-pw-error" class="error"></div>
+      </div>
+
+      <a href="index.html" class="host-link">← Back to games</a>
+    </div>
+
+    <!-- Screen 2: Dashboard -->
+    <div id="screen-dashboard" class="screen">
+      <div class="page-header" style="margin-bottom: 14px;">
+        <h1>Live Results</h1>
+        <p class="subtitle" id="dashboard-subtitle">Updates automatically</p>
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab active" id="tab-btn-selection" onclick="switchTab('selection', this)">🗳️ Most Likely</button>
+        <button class="tab"        id="tab-btn-trivia"    onclick="switchTab('trivia', this)">💑 Trivia</button>
+      </div>
+
+      <!-- Most Likely tab -->
+      <div id="tab-selection">
+        <div class="meta-bar">
+          <span id="voter-count">Loading…</span>
+        </div>
+        <div id="selection-results"></div>
+      </div>
+
+      <!-- Trivia tab -->
+      <div id="tab-trivia" style="display: none;">
+        <div class="trivia-status" id="trivia-status"></div>
+        <div class="match-count" id="match-count"></div>
+        <div id="trivia-results"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    const SELECTION_QUESTIONS = [
+      "Who is best at keeping secrets?",
+      "Better cook?",
+      "More likely to be running late?",
+      "Most likely to get lost?",
+      "Who made the first move?",
+      "Better caretaker when the other is sick?",
+      "Crazier family?",
+      "More likely to talk their way out of a speeding ticket?",
+      "Wakes up earliest?",
+      "Will spend more time on the dance floor at the wedding?",
+      "Who makes the most plans?",
+      "Who is more forgetful?",
+      "Likes reality TV more?",
+      "Better dancer?",
+      "Spends more time on their phone?"
+    ];
+
+    const TRIVIA_QUESTIONS = [
+      "Favorite type of food",
+      "Favorite restaurant",
+      "What did they want to be when they grew up?",
+      "Favorite way to spend a Saturday afternoon",
+      "Dream vacation",
+      "Name of their high school",
+      "Zodiac sign",
+      "Favorite article of clothing",
+      "Number of times they floss per week",
+      "Favorite book",
+      "Favorite artist (music or other)",
+      "Name of their first pet",
+      "Birthday of their sibling",
+      "Shoe size",
+      "Mother's maiden name"
+    ];
+
+    let db;
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+    } catch (e) {
+      console.error('Firebase init error:', e);
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function checkHostPassword() {
+      const pw = document.getElementById('host-password').value;
+      if (pw !== APP_CONFIG.hostPassword) {
+        document.getElementById('host-pw-error').textContent = 'Wrong password!';
+        return;
+      }
+      showScreen('screen-dashboard');
+      startListening();
+    }
+
+    function switchTab(name, btn) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-selection').style.display = name === 'selection' ? 'block' : 'none';
+      document.getElementById('tab-trivia').style.display    = name === 'trivia'    ? 'block' : 'none';
+    }
+
+    function startListening() {
+      db.ref('selection_votes').on('value', snap => renderSelectionResults(snap.val() || {}));
+      db.ref('trivia_answers').on('value',  snap => renderTriviaResults(snap.val()  || {}));
+    }
+
+    // ── Most Likely Results ────────────────────────────────────────────────────
+
+    function renderSelectionResults(data) {
+      const players = Object.values(data);
+      const count   = players.length;
+      document.getElementById('voter-count').textContent =
+        `${count} player${count !== 1 ? 's' : ''} submitted`;
+
+      const html = SELECTION_QUESTIONS.map((q, qi) => {
+        const mollyVoters = [];
+        const reidVoters  = [];
+
+        players.forEach(p => {
+          const vote = p.answers && p.answers[qi];
+          if (vote === 'Molly') mollyVoters.push(p.name);
+          else if (vote === 'Reid') reidVoters.push(p.name);
+        });
+
+        const total    = mollyVoters.length + reidVoters.length;
+        const mollyPct = total > 0 ? (mollyVoters.length / total * 100) : 50;
+        const winner   =
+          mollyVoters.length > reidVoters.length ? 'Molly' :
+          reidVoters.length  > mollyVoters.length ? 'Reid'  : null;
+
+        const mollyPills = mollyVoters.map(n => `<span class="voter-pill pill-molly">${n}</span>`).join('');
+        const reidPills  = reidVoters.map(n  => `<span class="voter-pill pill-reid">${n}</span>`).join('');
+
+        return `
+          <div class="card">
+            <div class="q-text">
+              <span class="q-number">${qi + 1}</span>
+              <span>${q}</span>
+            </div>
+            ${total === 0
+              ? `<p class="no-votes">No votes yet</p>`
+              : `<div class="vote-bar-labels">
+                   <span style="color: var(--molly);">
+                     💕 Molly ${mollyVoters.length}${winner === 'Molly' ? ' 👑' : ''}
+                   </span>
+                   <span style="color: var(--reid);">
+                     ${winner === 'Reid' ? '👑 ' : ''}${reidVoters.length} Reid 🤵
+                   </span>
+                 </div>
+                 <div class="vote-bar-track">
+                   <div class="vote-bar-fill" style="width: ${mollyPct}%"></div>
+                 </div>
+                 <div style="margin-top: 8px;">
+                   ${mollyPills}${reidPills}
+                 </div>`
+            }
+          </div>`;
+      }).join('');
+
+      document.getElementById('selection-results').innerHTML = html;
+    }
+
+    // ── Trivia Results ─────────────────────────────────────────────────────────
+
+    function renderTriviaResults(data) {
+      const molly = data.molly || null;
+      const reid  = data.reid  || null;
+
+      // Status line
+      const submitted = [molly && 'Molly', reid && 'Reid'].filter(Boolean);
+      document.getElementById('trivia-status').textContent =
+        submitted.length === 0
+          ? 'Neither Molly nor Reid has submitted yet.'
+          : `Submitted: ${submitted.join(' & ')}`;
+
+      if (!molly && !reid) {
+        document.getElementById('trivia-results').innerHTML =
+          '<div class="card"><p class="no-votes" style="text-align:center;">Waiting for answers…</p></div>';
+        document.getElementById('match-count').textContent = '';
+        return;
+      }
+
+      let matches = 0;
+      let total   = 0;
+
+      function answerRow(selfData, partnerData, selfLabel, partnerLabel, selfClass, partnerClass, qi) {
+        const selfVal    = (selfData    && selfData.self    && selfData.self[qi])    || null;
+        const partnerVal = (partnerData && partnerData.partner && partnerData.partner[qi]) || null;
+
+        const bothPresent = selfVal !== null && partnerVal !== null;
+        if (bothPresent) {
+          total++;
+          const isMatch = selfVal.toLowerCase().trim() === partnerVal.toLowerCase().trim();
+          if (isMatch) matches++;
+        }
+
+        return `
+          <div class="trivia-row">
+            <div class="trivia-cell ${selfClass}">
+              <div class="cell-label">${selfLabel} says</div>
+              ${selfVal ?? '<em style="opacity:0.5">not submitted</em>'}
+            </div>
+            <div class="trivia-cell ${partnerClass}">
+              <div class="cell-label">${partnerLabel} guesses</div>
+              ${partnerVal ?? '<em style="opacity:0.5">not submitted</em>'}
+            </div>
+          </div>
+          ${bothPresent
+            ? `<div class="match-badge">${selfVal.toLowerCase().trim() === partnerVal.toLowerCase().trim() ? '✅ Match!' : '❌ Mismatch'}</div>`
+            : ''}`;
+      }
+
+      const aboutMollyHtml = TRIVIA_QUESTIONS.map((q, i) => `
+        <div class="card">
+          <div class="q-text">
+            <span class="q-number">${i + 1}</span>
+            <span>${q}</span>
+          </div>
+          ${answerRow(molly, reid, 'Molly', 'Reid', 'molly-cell', 'reid-cell', i)}
+        </div>`).join('');
+
+      const aboutReidHtml = TRIVIA_QUESTIONS.map((q, i) => `
+        <div class="card">
+          <div class="q-text">
+            <span class="q-number">${i + 1}</span>
+            <span>${q}</span>
+          </div>
+          ${answerRow(reid, molly, 'Reid', 'Molly', 'reid-cell', 'molly-cell', i)}
+        </div>`).join('');
+
+      document.getElementById('trivia-results').innerHTML =
+        `<div class="section-title">About Molly</div>${aboutMollyHtml}` +
+        `<div class="section-title">About Reid</div>${aboutReidHtml}`;
+
+      document.getElementById('match-count').textContent =
+        total > 0 ? `${matches} / ${total} matches` : '';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('host-password').addEventListener('keypress', e => {
+        if (e.key === 'Enter') checkHostPassword();
+      });
+    });
+  </script>
+</body>
+</html>
